@@ -1,4 +1,5 @@
 import os
+import io
 from osgeo import gdal
 
 from file_managers.geotiff import GeoData
@@ -81,47 +82,30 @@ class GeoTiffManager(object):
 geotiffs = GeoData()
 base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sizes = [1.0/math.pow(2, x) for x in range(0, 30)]
-# resolutions = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001,]
-# print sizes
-resolution = 0.0001  #resolutions[zoom]
 
-def array_to_jpg(data, filepath):
+
+def array_to_jpg(data):
     data = numpy.array(data)
     rescaled = (255.0 / data.max() * (data - data.min())).astype(numpy.uint8)
     img = Image.fromarray(rescaled)
     img = img.resize((256, 256), Image.ANTIALIAS)
-
-    basepath = os.path.dirname(filepath)
-    if not os.path.exists(basepath):
-        os.makedirs(basepath)
-    img.save(filepath)
+    return img
 
 
-def get_tile(x, y, zoom):
-
-    # temporary for easy of testing
+def get_tile_data(x, y, zoom):
     size = sizes[zoom]
-    resolution = 0.001/math.pow(2, zoom)
-    print resolution
-
     lat = 48.0 + float(y)*size - size
     lng = -123.0 + float(x)*size - size
     lat += size
     lng += size
-    staticpath = "/static/images/tiles/zoom_%s/%s_%s.jpg" % (zoom, lat, lng)
-    filepath = os.path.join(base_dir, staticpath.lstrip("/"))
 
-    # create file
-    if not os.path.exists(filepath) and geotiffs.exists(lat, lng):
-        print "creating file for: %s, %s" % (lat, lng)
-        data = geotiffs.heights(lat, lng, lat+size, lng+size, resolution)
-        array_to_jpg(data, filepath)
+    if geotiffs.exists(lat, lng):
+        min_coords = (lat, lng)
+        max_coords = (lat+size, lng+size)
+        data = geotiffs.heights(min_coords, max_coords)
+        if data != None:
+            img = array_to_jpg(data)
+            output = io.BytesIO()
+            img.save(output, format="JPEG")
+            return output.getvalue()
 
-    # segmented file
-    if os.path.exists(filepath):
-        return staticpath
-
-    # # default
-    # colour = "blue" if (int(x)+int(y)) % 2 else "pink"
-    # return "/static/images/default/%s.jpg" % colour
-    return None

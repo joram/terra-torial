@@ -32,12 +32,6 @@ class GeoTiff(object):
         self.pixels = im.asarray()
         self.width = len(self.pixels)
         self.height = len(self.pixels[0])
-        print "filepath:%s\t w:%s, h:%s\t lat:%s, lng:%s" % (
-            self.filepath,
-            self.width,
-            self.height,
-            self.min_lat,
-            self.min_lng)
 
     @property
     def min_lat(self):
@@ -72,6 +66,24 @@ class GeoTiff(object):
         y = int(self.height*lng_ratio)
 
         return self.pixels[x][y]
+
+    def coords_to_xy(self, lat, lng):
+
+        if not (self.min_lat <= lat <= self.max_lat):
+            return None
+        if not (self.min_lng <= lng <= self.max_lng):
+            return None
+
+        lat_ratio = abs(lat - math.floor(lat))
+        lng_ratio = abs(lng - math.floor(lng))
+        x = int(self.width*lat_ratio)
+        y = int(self.height*lng_ratio)
+        return x, y
+
+    def subsection(self, min_coords, max_coords):
+        x1, y1 = self.coords_to_xy(min_coords[0], min_coords[1])
+        x2, y2 = self.coords_to_xy(max_coords[0], max_coords[1])
+        return self.pixels[x1:x2, y1:y2]
 
 
 class GeoData(object):
@@ -111,36 +123,14 @@ class GeoData(object):
         geo_tiff = self.geo_tiffs.get(self.key(lat, lng))
         return geo_tiff.height_at(lat, lng) if geo_tiff else 0
 
-    def heights(self, min_lat, min_lng, max_lat, max_lng, resolution=0.001):
-        latitudes = [min_lat + lat_tick*resolution for lat_tick in range(0, int((max_lat-min_lat)/resolution))]
-        longitudes = [min_lng + lng_tick*resolution for lng_tick in range(0, int((max_lng-min_lng)/resolution))]
-        data = []
-        for lat in latitudes:
-            row = [self.height(lat, lng) for lng in longitudes]
-            data.append(row)
-        return data
+    def heights(self, min_coords, max_coords):
+        min_lat, min_lng = min_coords
+        max_lat, max_lng = max_coords
+        if self.exists(min_lat, min_lng) and self.exists(max_lat, max_lng):
+            return self.geo_tiffs[self.key(min_lat, min_lng)].subsection(min_coords, max_coords)
 
-    def tiles(self, size=0.01, resolution=0.001, max=None):
-        count = 0
-        lat = self.min_lat
-        lng = self.min_lng
-        while lat < self.max_lat:
-            while lng < self.max_lng:
-                if max and count >= max:
-                    return
-                yield self.heights(lat, lng, lat+size, lng+size, resolution), lat, lng
-                count += 1
-                lng += size
-            lat += size
-
-
-
-
-# geo_data = GeoData()
-#
-# # import pprint
-# tiles_count = 0
-# for tile, lat, lng in geo_data.tiles(size=2, resolution=0.0025):
-#     # pprint.pprint(tile)
-#     write_obj(tile, "./test_%s_%s.obj" % (lat, lng))
-#     tiles_count += 1
+    def img(self, min_coords, max_coords):
+        data = self.heights(min_coords, max_coords)
+        if data:
+            from views.tiles import array_to_jpg
+            return array_to_jpg(data)

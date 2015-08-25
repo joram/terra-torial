@@ -3,6 +3,7 @@ from geopy.geocoders import Nominatim
 import tifffile
 import math
 
+# ASTER GDEM is a product of METI and NASA.
 
 class GeoTiff(object):
 

@@ -84,11 +84,12 @@ base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 sizes = [1.0/math.pow(2, x) for x in range(0, 30)]
 
 
-def array_to_jpg(data):
+def array_to_jpg(data, resize=False):
     data = numpy.array(data)
     rescaled = (255.0 / data.max() * (data - data.min())).astype(numpy.uint8)
     img = Image.fromarray(rescaled)
-    img = img.resize((256, 256), Image.ANTIALIAS)
+    if resize:
+        img = img.resize((256, 256), Image.ANTIALIAS)
     return img
 
 
@@ -104,7 +105,7 @@ def get_tile_data(x, y, zoom):
         max_coords = (lat+size, lng+size)
         data = geotiffs.heights(min_coords, max_coords)
         if data != None:
-            img = array_to_jpg(data)
+            img = array_to_jpg(data, zoom >= 6)
             output = io.BytesIO()
             img.save(output, format="JPEG")
             return output.getvalue()

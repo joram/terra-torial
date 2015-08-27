@@ -1,9 +1,13 @@
+import io
 import os
 from geopy.geocoders import Nominatim
 import tifffile
 import math
+from file_managers.heightmap import Heightmap
+from flask import make_response
 
 # ASTER GDEM is a product of METI and NASA.
+
 
 class GeoTiff(object):
 
@@ -54,29 +58,19 @@ class GeoTiff(object):
     def area(self):
         return self.min_lat, self.max_lat, self.min_lng, self.max_lng
 
-    def height_at(self, lat, lng):
-
+    def contains(self, lat, lng):
         if not (self.min_lat <= lat <= self.max_lat):
-            return None
+            return False
         if not (self.min_lng <= lng <= self.max_lng):
-            return None
-
-        lat_ratio = abs(lat - math.floor(lat))
-        lng_ratio = abs(lng - math.floor(lng))
-        x = int(self.width*lat_ratio)
-        y = int(self.height*lng_ratio)
-
-        return self.pixels[x][y]
+            return False
+        return True
 
     def coords_to_xy(self, lat, lng):
-
-        if not (self.min_lat <= lat <= self.max_lat):
-            return None
-        if not (self.min_lng <= lng <= self.max_lng):
+        if not self.contains(lat, lng):
             return None
 
-        lat_ratio = abs(lat - math.floor(lat))
-        lng_ratio = abs(lng - math.floor(lng))
+        lat_ratio = abs(lat - self.min_lat)
+        lng_ratio = abs(lng - self.min_lng)
         x = int(self.width*lat_ratio)
         y = int(self.height*lng_ratio)
         return x, y
@@ -120,18 +114,42 @@ class GeoData(object):
             return True
         return False
 
-    def height(self, lat, lng):
-        geo_tiff = self.geo_tiffs.get(self.key(lat, lng))
-        return geo_tiff.height_at(lat, lng) if geo_tiff else 0
-
-    def heights(self, min_coords, max_coords):
+    def heightmap(self, min_coords, max_coords):
         min_lat, min_lng = min_coords
-        max_lat, max_lng = max_coords
-        if self.exists(min_lat, min_lng) and self.exists(max_lat, max_lng):
+        if self.exists(min_lat, min_lng):
             return self.geo_tiffs[self.key(min_lat, min_lng)].subsection(min_coords, max_coords)
 
-    def img(self, min_coords, max_coords):
-        data = self.heights(min_coords, max_coords)
+    def get_jpg(self, min_coords, max_coords):
+        data = self.heightmap(min_coords, max_coords)
         if data:
-            from views.tiles import array_to_jpg
-            return array_to_jpg(data)
+            return Heightmap(data).get_jpg()
+
+    def jpg_tile_response(self, x, y, zoom):
+        sizes = [1.0/math.pow(2, s) for s in range(0, 30)]
+        size = sizes[zoom]
+        lat = 48.0 + float(y)*size
+        lng = -123.0 + float(x)*size
+
+        # print (lat, lng)
+        # if (lat, lng) == (48, -123):
+        #     import pdb
+        #     pdb.set_trace()
+
+        if self.exists(lat, lng):
+            min_coords = (lat, lng)
+            max_coords = (lat+size, lng+size)
+            data = self.heightmap(min_coords, max_coords)
+            if data != None:
+                img = Heightmap(data).get_jpg()
+                output = io.BytesIO()
+                img.save(output, format="JPEG")
+                resp = make_response(output.getvalue())
+                resp.content_type = "image/jpeg"
+                return resp
+        return ""
+
+    # def get_obj(self, min_coords, max_coords):
+    #     data = self.heightmap(min_coords, max_coords)
+    #     if data:
+    #         from file_managers.wavefront import Obj
+    #         return Obj(data).get_obj()

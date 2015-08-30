@@ -119,37 +119,40 @@ class GeoData(object):
         if self.exists(min_lat, min_lng):
             return self.geo_tiffs[self.key(min_lat, min_lng)].subsection(min_coords, max_coords)
 
-    def get_jpg(self, min_coords, max_coords):
-        data = self.heightmap(min_coords, max_coords)
-        if data:
-            return Heightmap(data).get_jpg()
 
-    def jpg_tile_response(self, x, y, zoom):
+    def get_heightmap(self, x, y, offset_x=48, offset_y=-123, zoom=0):
         sizes = [1.0/math.pow(2, s) for s in range(0, 30)]
         size = sizes[zoom]
-        lat = 48.0 + float(y)*size
-        lng = -123.0 + float(x)*size
+        lat = offset_x + float(y)*size
+        lng = offset_y + float(x)*size
 
-        # print (lat, lng)
-        # if (lat, lng) == (48, -123):
-        #     import pdb
-        #     pdb.set_trace()
+        if not self.exists(lat, lng):
+            return None
 
-        if self.exists(lat, lng):
-            min_coords = (lat, lng)
-            max_coords = (lat+size, lng+size)
-            data = self.heightmap(min_coords, max_coords)
-            if data != None:
-                img = Heightmap(data).get_jpg()
-                output = io.BytesIO()
-                img.save(output, format="JPEG")
-                resp = make_response(output.getvalue())
-                resp.content_type = "image/jpeg"
-                return resp
-        return ""
+        min_coords = (lat, lng)
+        max_coords = (lat+size, lng+size)
+        return self.heightmap(min_coords, max_coords)
 
-    # def get_obj(self, min_coords, max_coords):
-    #     data = self.heightmap(min_coords, max_coords)
-    #     if data:
-    #         from file_managers.wavefront import Obj
-    #         return Obj(data).get_obj()
+    def jpg_tile_response(self, x, y, offset_x=48, offset_y=-123, zoom=0):
+        data = self.get_heightmap(x, y, offset_x, offset_y, zoom)
+        if not data.any():
+            return None
+
+        img = Heightmap(data).get_jpg()
+        output = io.BytesIO()
+        img.save(output, format="JPEG")
+        resp = make_response(output.getvalue())
+        resp.content_type = "image/jpeg"
+        return resp
+
+    def obj_tile_response(self, x, y, offset_x=48, offset_y=-123, zoom=0):
+        data = self.get_heightmap(x, y, offset_x, offset_y, zoom)
+        if not data.any():
+            return None
+
+        obj_str = Heightmap(data).get_obj()
+        output = io.BytesIO()
+        output.writelines(obj_str)
+        resp = make_response(output.getvalue())
+        resp.content_type = "object/wavefront"
+        return resp

@@ -15,9 +15,15 @@ def index():
 
 
 @app.route('/tile/<x>_<y>_<zoom>.jpg')
-@app.route('/tile/<x>/<y>/zoom/<zoom>/')
+@app.route('/zoom/<zoom>/tile/<x>/<y>/jpg/')
 def jpg_tile(x, y, zoom):
-    return geotiffs.jpg_tile_response(x, y, int(zoom))
+    return geotiffs.jpg_tile_response(x, y, zoom=int(zoom))
+
+@app.route('/tile/<x>_<y>_<zoom>.obj')
+@app.route('/zoom/<zoom>/tile/<x>/<y>/obj/')
+def obj_tile(x, y, zoom):
+    return geotiffs.obj_tile_response(x, y, zoom=int(zoom))
+
 
 if __name__ == '__main__':
     app.run()

@@ -9,10 +9,13 @@ app.debug = True
 geotiffs = GeoData()
 sizes = [1.0/math.pow(2, x) for x in range(0, 30)]
 
-@app.route('/')
-def index():
+@app.route('/map/2d')
+def map_2d():
     return render_template("map.html")
 
+@app.route('/map/3d')
+def map_3d():
+    return render_template("webgl.html")
 
 @app.route('/tile/<x>_<y>_<zoom>.jpg')
 @app.route('/zoom/<zoom>/tile/<x>/<y>/jpg/')

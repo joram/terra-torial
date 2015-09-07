@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import math
 from flask import Flask, render_template
-from file_managers.geotiff import GeoData
+from file_managers.geotiffs_wrapper import GeoData
 
 app = Flask(__name__)
 
@@ -24,17 +24,21 @@ def map_3d():
     return render_template("webgl.html")
 
 
-@app.route('/api/v0/tile/<x>_<y>_<zoom>.jpg')
-@app.route('/api/v0/zoom/<zoom>/tile/<x>/<y>/jpg/')
+@app.route('/api/v0/tile/<string:x>_<string:y>_<string:zoom>.jpg')
+@app.route('/api/v0/zoom/<string:zoom>/tile/<string:x>/<string:y>/jpg/')
 def jpg_tile(x, y, zoom):
-    return geotiffs.jpg_tile_response(x, y, zoom=int(zoom))
+    print("%s, %s, %s" % (int(x), int(y), int(zoom)))
+    return geotiffs.jpg_tile_response(int(x), int(y), zoom=int(zoom))
 
 
 @app.route('/api/v0/tile/<x>_<y>_<zoom>.obj')
 @app.route('/api/v0/zoom/<zoom>/tile/<x>/<y>/obj/')
 def obj_tile(x, y, zoom):
-    return geotiffs.obj_tile_response(x, y, zoom=int(zoom))
+    return geotiffs.obj_tile_response(int(x), int(y), zoom=int(zoom))
 
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('error.html'), 404
 
 if __name__ == '__main__':
     app.debug = True

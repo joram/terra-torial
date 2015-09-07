@@ -1,6 +1,6 @@
 
 var geotiffTypeOptions = {
-  getTileUrl: function(coord, zoom) {return 'zoom/'+zoom+'/tile/' + coord.x + '/' + coord.y + '/jpg/';},
+  getTileUrl: function(coord, zoom) {return '/api/v0/zoom/'+zoom+'/tile/' + coord.x + '/' + coord.y + '/jpg/';},
   tileSize: new google.maps.Size(256, 256),
   maxZoom: 15,
   minZoom: 0,

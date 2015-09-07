@@ -15,6 +15,7 @@ class GeoTiff(object):
         self.filepath = filepath
         self.filename = os.path.basename(filepath)
         self.geolocator = Nominatim()
+        self._pixels = None
 
         # parse lat/lng from filename
         position = self.filename
@@ -32,11 +33,17 @@ class GeoTiff(object):
         self._lat = int(self._lat)
         self._lng = int(self._lng)
 
+
+    @property
+    def pixels(self):
+        
         # parse width, height, pixels from image
-        im = tifffile.TiffFile(self.filepath)
-        self.pixels = im.asarray()
-        self.width = len(self.pixels)
-        self.height = len(self.pixels[0])
+        if not self._pixels:
+            im = tifffile.TiffFile(self.filepath)
+            self._pixels = im.asarray()
+            self.width = len(self._pixels)
+            self.height = len(self._pixels[0])
+        return self._pixels
 
     @property
     def min_lat(self):

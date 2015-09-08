@@ -35,26 +35,20 @@ class GeoData(object):
         min_lng = int(math.floor(lng))
         return min_lat, min_lng
 
-    def exists(self, lat, lng):
-        if self.key(lat, lng) in self.geo_tiffs.keys():
-            return True
-        return False
-
-    def heightmap(self, min_coords, max_coords):
-        min_lat, min_lng = min_coords
-        if self.exists(min_lat, min_lng):
-            return self.geo_tiffs[self.key(min_lat, min_lng)].subsection(min_coords, max_coords)
-
-    def get_heightmap(self, x, y, offset_x=48, offset_y=-123, zoom=0):
+    def heightmap(self, x, y, zoom):
+        offset_lat = 48
+        offset_lng = -123
         size = self.sizes[zoom]
-        lat = offset_x + (-float(y))*size
-        lng = offset_y + float(x)*size
-        min_coords = (lat, lng)
-        max_coords = (lat+size, lng+size)
-        return self.heightmap(min_coords, max_coords)
+        y += 1
+        lat = offset_lat - float(y)*size
+        lng = offset_lng + float(x)*size
 
-    def jpg_tile_response(self, x, y, offset_x=48, offset_y=-123, zoom=0):
-        data = self.get_heightmap(x, y, offset_x, offset_y, zoom)
+        geo_tiff = self.geo_tiffs.get(self.key(lat, lng))
+        if geo_tiff:
+            return geo_tiff.subsection(x, y, zoom)
+
+    def jpg_tile_response(self, x, y, zoom=0):
+        data = self.heightmap(x, y, zoom)
         if data == None or not data.any():
             return None
 

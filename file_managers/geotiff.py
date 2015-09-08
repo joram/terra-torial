@@ -75,17 +75,47 @@ class GeoTiff(object):
             return False
         return True
 
-    def coords_to_xy(self, lat, lng):
-        if not self.contains(lat, lng):
-            return None
+    # def coords_to_xy(self, lat, lng, zoom):
+    #     if not self.contains(lat, lng):
+    #         return None
+    #
+    #     lat_ratio = abs(lat - self.min_lat)
+    #     x = int(self.width*lat_ratio)
+    #
+    #     size = self.height*self.sizes[zoom]
+    #     lng_ratio = abs(lng - self.min_lng)
+    #     y = int(self.height * lng_ratio if lng_ratio > 0 else 0)
+    #     print("%s\t ->\t%s" % ((lat, lng), (x, y)))
+    #     return x, y
+    
+        # test = {}
+        # test[(49.5, -123.5)] = (1800, 1800)
+        # test[(49.0, -124.0)] = (0, 0)
+        #
+        # test[(48.5, -124.0)] = (1800, 1800)
+        # test[(49.0, -123.5)] = (3601, 0)
+        #
+        # test[(49.0, -123.5)] = (0, 3601)
+        # test[(49.5, -123.0)] = (1800, 1800)
+        #
+        # test[(48.0, -124.0)] = (0, 1800)
+        # test[(48.5, -123.5)] = (1800, 0)
+        #
+        # return test.get((lat, lng))
 
-        lat_ratio = abs(lat - self.min_lat)
-        lng_ratio = abs(lng - self.min_lng)
-        x = int(self.width*lat_ratio)
-        y = int(self.height*lng_ratio)
-        return x, y
+    def subsection(self, y, x, zoom):
+        _ = self.pixels
 
-    def subsection(self, min_coords, max_coords):
-        x1, y1 = self.coords_to_xy(min_coords[0], min_coords[1])
-        x2, y2 = self.coords_to_xy(max_coords[0], max_coords[1])
-        return self.pixels[x1:x2, y1:y2]
+        num_tiles = int(1/self.sizes[zoom])
+        ratio = self.sizes[zoom]
+        tile_width = self.width*ratio
+
+        x %= num_tiles
+        y %= num_tiles
+        y = (num_tiles - 1) - y
+
+        min_x = tile_width*x
+        min_y = tile_width*y
+        max_x = min_x + tile_width
+        max_y = min_y + tile_width
+        return self.pixels[min_x:max_x, min_y:max_y]

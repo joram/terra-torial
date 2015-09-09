@@ -27,7 +27,7 @@ def map_3d():
 @app.route('/api/v0/tile/<string:x>_<string:y>_<string:zoom>.jpg')
 @app.route('/api/v0/zoom/<string:zoom>/tile/<string:x>/<string:y>/jpg/')
 def jpg_tile(x, y, zoom):
-    response = geotiffs.jpg_tile_response(int(x), int(y), zoom=int(zoom))
+    response = geotiffs.jpg_tile_response(int(x), int(y), int(zoom))
     if response:
         return response
     return redirect('/error', code=404)
@@ -36,7 +36,7 @@ def jpg_tile(x, y, zoom):
 @app.route('/api/v0/tile/<x>_<y>_<zoom>.obj')
 @app.route('/api/v0/zoom/<zoom>/tile/<x>/<y>/obj/')
 def obj_tile(x, y, zoom):
-    response = geotiffs.obj_tile_response(int(x), int(y), zoom=int(zoom))
+    response = geotiffs.obj_tile_response(int(x), int(y), int(zoom))
     if response:
         return response
     return redirect('/error', code=404)

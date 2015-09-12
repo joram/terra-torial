@@ -33,6 +33,14 @@ def jpg_tile(x, y, zoom):
     return redirect('/error', code=404)
 
 
+@app.route('/api/v0/zoom/<string:zoom>/tile/<string:x>/<string:y>/heightmap/')
+def heightmap_tile(x, y, zoom):
+    response = geotiffs.heightmap_tile_response(int(x), int(y), int(zoom))
+    if response:
+        return response
+    return redirect('/error', code=404)
+
+
 @app.route('/api/v0/tile/<x>_<y>_<zoom>.obj')
 @app.route('/api/v0/zoom/<zoom>/tile/<x>/<y>/obj/')
 def obj_tile(x, y, zoom):

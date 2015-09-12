@@ -16,12 +16,27 @@ class Heightmap(object):
             return self._jpg
 
         data = numpy.array(self.data)
-        rescaled = (255.0 / data.max() * (data - data.min())).astype(numpy.uint8)
+        m = data.max()
+        if m <= 1:
+            m = 255.0
+        rescaled = (255.0 / m * (data - data.min())).astype(numpy.uint8)
         img = Image.fromarray(rescaled)
         if self.jpg_output_size:
             img = img.resize(self.jpg_output_size, Image.ANTIALIAS)
         self._jpg = img
         return img
+
+    def chunks(self, l, n):
+        matrix = []
+        for i in xrange(0, len(l), n):
+            matrix.append(l[i:i+n])
+        return matrix
+
+    def get_matrix(self):
+        img = self.get_jpg()
+        data = list(img.getdata())
+        matrix = self.chunks(data, img.size[0])
+        return matrix
 
     def get_obj(self):
         if self._obj:

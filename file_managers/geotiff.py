@@ -29,6 +29,7 @@ class GeoTiff(object):
             self._pixels = im.asarray()
             self._width = len(self._pixels)
             self._height = len(self._pixels[0])
+
     @property
     def pixels(self):
         if self._pixels == None:

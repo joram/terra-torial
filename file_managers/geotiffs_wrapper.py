@@ -1,6 +1,7 @@
 import io
-import os
+import json
 import math
+import os
 from file_managers.heightmap import Heightmap
 from flask import make_response
 from file_managers.geotiff import GeoTiff
@@ -40,3 +41,11 @@ class GeoData(object):
         resp = make_response(output.getvalue())
         resp.content_type = "image/jpeg"
         return resp
+
+    def heightmap_tile_response(self, x, y, zoom=0):
+        data = self.heightmap(x, y, zoom)
+        if data == None or not data.any():
+            return None
+
+        matrix = Heightmap(data).get_matrix()
+        return make_response(json.dumps(matrix))

@@ -30,22 +30,22 @@ class GeoData(object):
         if geo_tiff:
             return geo_tiff.subsection(y, x, zoom)
 
-    def jpg_tile_response(self, x, y, zoom=0):
+    def jpg_tile_response(self, x, y, zoom=0, size=256):
         data = self.heightmap(x, y, zoom)
         if data == None or not data.any():
             return None
 
-        img = Heightmap(data).get_jpg()
+        img = Heightmap(data, resize=(size, size)).get_jpg()
         output = io.BytesIO()
         img.save(output, format="JPEG")
         resp = make_response(output.getvalue())
         resp.content_type = "image/jpeg"
         return resp
 
-    def heightmap_tile_response(self, x, y, zoom=0):
+    def heightmap_tile_response(self, x, y, zoom=0, size=256):
         data = self.heightmap(x, y, zoom)
         if data == None or not data.any():
             return None
 
-        matrix = Heightmap(data).get_matrix()
+        matrix = Heightmap(data, resize=(size, size)).get_matrix()
         return make_response(json.dumps(matrix))

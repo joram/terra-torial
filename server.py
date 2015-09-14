@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import math
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 from file_managers.geotiffs_wrapper import GeoData
 
 app = Flask(__name__)
@@ -27,7 +27,8 @@ def map_3d():
 @app.route('/api/v0/tile/<string:x>_<string:y>_<string:zoom>.jpg')
 @app.route('/api/v0/zoom/<string:zoom>/tile/<string:x>/<string:y>/jpg/')
 def jpg_tile(x, y, zoom):
-    response = geotiffs.jpg_tile_response(int(x), int(y), int(zoom))
+    size = request.args.get("size", 256)
+    response = geotiffs.jpg_tile_response(int(x), int(y), int(zoom), int(size))
     if response:
         return response
     return redirect('/error', code=404)
@@ -35,7 +36,8 @@ def jpg_tile(x, y, zoom):
 
 @app.route('/api/v0/zoom/<string:zoom>/tile/<string:x>/<string:y>/heightmap/')
 def heightmap_tile(x, y, zoom):
-    response = geotiffs.heightmap_tile_response(int(x), int(y), int(zoom))
+    size = request.args.get("size", 256)
+    response = geotiffs.heightmap_tile_response(int(x), int(y), int(zoom), int(size))
     if response:
         return response
     return redirect('/error', code=404)

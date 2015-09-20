@@ -47,5 +47,5 @@ class GeoData(object):
         if data == None or not data.any():
             return None
 
-        matrix = Heightmap(data, resize=(size, size)).get_matrix()
+        matrix = Heightmap(data, resize=(size, size), obj_vertical_scale=0.005).get_matrix()
         return make_response(json.dumps(matrix))

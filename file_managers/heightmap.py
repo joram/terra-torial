@@ -19,7 +19,7 @@ class Heightmap(object):
         m = data.max()
         if m <= 1:
             m = 255.0
-        rescaled = (255.0 / m * (data - data.min())).astype(numpy.uint8)
+        rescaled = (data - data.min()).astype(numpy.uint8)
         img = Image.fromarray(rescaled)
         if self.jpg_output_size:
             img = img.resize(self.jpg_output_size, Image.ANTIALIAS)

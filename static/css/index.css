@@ -1,0 +1,13 @@
+#main {
+	width: 100%;
+	text-align: center ;
+}
+
+.interface_mode {
+	margin: auto 1.5em;
+	display: inline-block;
+}
+.interface_mode img {
+	width: 200px;
+	height: auto;
+}
